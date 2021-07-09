@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t pipeline11/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true pipeline11/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t pipeline11/complex-client ./client
+  - docker build -t pipeline11/complex-nginx ./nginx
+  - docker build -t pipeline11/complex-server ./server
+  - docker build -t pipeline11/complex-worker ./worker
+
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  - docker push pipeline11/complex-client
+  - docker push pipeline11/complex-nginx
+  - docker push pipeline11/complex-server
+  - docker push pipeline11/complex-worker
